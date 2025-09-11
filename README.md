@@ -1,18 +1,28 @@
 # MobileRL: Online Agentic Reinforcement Learning for Mobile GUI Agents
 
-> **TL;DR.** We introduce MobileRL, an online agentic reinforcement learning framework that turns general-purpose vision-language models into strong mobile GUI agents. By combining a staged reasoning warm-up with difficulty-adaptive online RL, MobileRL achieves state-of-the-art success rates on AndroidWorld and AndroidLab, substantially outperforming both proprietary and open-source baselines. The MobileRL is also deployed in the AutoGLM production pipeline.
+> **TL;DR.** We introduce MobileRL, an online agentic reinforcement learning framework that turns general-purpose vision-language models into strong mobile GUI agents. By combining a staged reasoning warm-up with difficulty-adaptive online RL, MobileRL achieves state-of-the-art success rates on AndroidWorld and AndroidLab. 
 
+<div align="center">
+
+📃[Paper](assets/MobileRL_paper.pdf)
+
+</div>
+
+---
 ## Open-Source Roadmap
 Will be open-sourced soon upon legal approval: 
 - [ ] **Evaluation framework** 
 - [ ] **MobileRL-9B checkpoint** 
 
+---
 
 ## Abstract
 
 Building general-purpose graphical user interface (GUI) agents has become increasingly promising with the progress in vision language models. However, developing effective mobile GUI agents with reinforcement learning (RL) remains challenging due to the heavy-tailed distribution of task difficulty and the inefficiency of large-scale environment sampling. We present an online agentic reinforcement learning framework MobileRL to enhance GUI agents in mobile environments. Its core component is the Difficulty-Adaptive GRPO (AdaGRPO) algorithm. In AdaGRPO, we design difficulty-adaptive positive replay and failure curriculum filtering to adapt the model to different task difficulties. We introduce the shortest path reward adjustment strategy to reshape rewards concerning the task length in multi-turn agentic tasks. Those strategies jointly stabilize RL training, improve sample efficiency, and generate strong performance across diverse mobile apps and tasks. We apply MobileRL to two open models (Qwen2.5-VL-7B-Instruct and GLM-4.1V-9B-Base). The resultant MobileRL-9B model achieves state-of-the-art results in terms of success rates on both AndroidWorld (75.8%) and AndroidLab (46.8%). The MobileRL framework is adopted in the AutoGLM products.
 
-## Method Overview
+---
+
+## Method
 
 ![Framework overview](assets/androidrl-main.png)
 
@@ -30,7 +40,7 @@ Mobile GUI agents must follow complex instructions, reason over cluttered screen
 
 ---
 
-## 📊 Main Results
+## Performance
 
 We evaluate on two interactive Android benchmarks:
 
@@ -59,16 +69,3 @@ We evaluate on two interactive Android benchmarks:
 
 ---
 
-## Ablations & What Matters
-
-MobileRL’s performance comes from both stages:
-
-- Framework ablation (Qwen2.5-VL-7B backbone):  
-  1) +reasoning-free sft → 50.2 / 36.9 SR  
-  2) +reasoning sft → 56.8 / 38.7 SR  
-  3) +Online RL (AdaGRPO) → 72.0 / 42.5 SR  
-     _(AndroidWorld / AndroidLab)_
-
-- Component ablations (examples from paper):  
-  - w/o AdaGRPO (online RL): drops to 56.8 SR on AndroidWorld.  
-  - Removing AdaPR, SPA, or FCF each harms SR, highlighting the importance of adaptive replay, reward adjustment, and failure-focused curricula.
