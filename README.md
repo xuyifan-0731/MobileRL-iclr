@@ -33,8 +33,8 @@ We provide packaged test environments for **AndroidWorld** and **AndroidLab** as
 Before proceeding, pull the required Docker images:
 
 ```shell
-docker pull xuyifan0731/mobilerl-androidlab-eval
-docker pull xuyifan0731/mobilerl-androidworld-eval
+docker pull anonymous0bvcow8qfggoyac/mobilerl-androidlab-eval
+docker pull anonymous0bvcow8qfggoyac/mobilerl-androidworld-eval
 ```
 
 ---

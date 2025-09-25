@@ -20,7 +20,7 @@ task:
 
 eval:
   avd_name: Pixel_7_Pro_API_33
-  docker_image_name: xuyifan0731/mobilerl-androidlab-eval
+  docker_image_name: anonymous0bvcow8qfggoyac/mobilerl-androidlab-eval
   docker_args:
     port: 6060
   adb_path: /path/to/adb

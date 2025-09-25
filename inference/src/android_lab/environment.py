@@ -38,5 +38,5 @@ class AndroidLabEnvironmentDelegation(EnvironmentDelegation):
 
     def get_container_images(self) -> Dict[str, str]:
         return {
-            'android_lab_eval': 'xuyifan0731/mobilerl-androidlab-eval'
+            'android_lab_eval': 'anonymous0bvcow8qfggoyac/mobilerl-androidlab-eval'
         }

@@ -8,7 +8,7 @@ from aiohttp import ClientSession
 from agentrl.worker.environment import EnvironmentDelegation
 from ..port_allocator import allocate_port
 
-DOCKER_IMAGE = 'xuyifan0731/mobilerl-androidworld-eval'
+DOCKER_IMAGE = 'anonymous0bvcow8qfggoyac/mobilerl-androidworld-eval'
 
 
 class PortAllocatorClient:

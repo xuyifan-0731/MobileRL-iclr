@@ -11,6 +11,12 @@ We provide two usage modes:
 
 It should be noted that the results reported in this paper were obtained using SGLang with Docker-based deployment. Given that online training environments are subject to a variety of factors that may influence performance—such as deployment configurations, inference engines, and image compression rates and methods—variations of 1–2% are not uncommon. Furthermore, as the online evaluation requires the execution of multiple correct steps to yield the final SR score, such fluctuations are to be expected. To ensure reliability, the MobileRL reported results were averaged over three independent runs. For researchers who intend to train their own models using our framework, it is essential to ensure that training and inference remain strictly consistent, as any divergence may compromise the comparability of results.
 
+Before proceeding, pull the required Docker images for the AVDs:
+
+```shell
+docker pull anonymous0bvcow8qfggoyac/mobilerl-androidlab-eval
+docker pull anonymous0bvcow8qfggoyac/mobilerl-androidworld-eval
+```
 
 ## Local Test
 
@@ -116,7 +122,7 @@ To run the controller directly on the host machine, please refer to the [AgentRL
 To run the controller in a docker container:
 
 ```shell
-docker run -d --name agentrl-controller --network host jingbh/agentrl-controller:latest controller
+docker run -d --name agentrl-controller --network host anonymous0bvcow8qfggoyac/agentrl-controller:latest controller
 ```
 
 #### Task Workers
