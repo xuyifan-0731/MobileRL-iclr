@@ -1,0 +1,238 @@
+data:
+  tokenizer: null
+  train_files: datasets/train.parquet # no use
+  val_files: datasets/test.parquet # no use
+  prompt_key: prompt
+  max_prompt_length: 16384
+  max_response_length: 4096
+  train_batch_size: -1
+  val_batch_size: -1
+  return_raw_input_ids: False  # This should be set to true when the tokenizer between policy and rm differs
+  return_raw_chat: False
+  shuffle: True
+  seed: 42
+  task_type: gen_chat_multi
+  use_multitask: False
+  concurrency: 128
+  use_curriculum: True
+  curriculum:
+    type: android_world
+    task: datasets/task_list.json
+    invalid_tasks: null
+    init: null
+  gen_chat_multi:
+    train:
+      - name: android_world
+        index_start: 0
+        index_end: 2000
+        ratio: 4
+      - name: android_lab
+        index_start: 0
+        index_end: 1104
+        ratio: 1
+    val:
+      - name: android_single_round
+        index_start: 17000
+        index_end: 17300
+
+actor_rollout_ref:
+  hybrid_engine: False
+  exchange_size: 1e9
+  stale_ratio: 0.3125
+  task_adv_normalize: True
+  model:
+    path: 
+    external_lib: null
+    override_config:
+      freeze_vit: true
+    enable_gradient_checkpointing: True
+    use_remove_padding: True
+    trust_remote_code: True
+  actor:
+    strategy: fsdp  # This is for backward-compatibility
+    ppo_mini_batch_size: -1
+    ppo_micro_batch_size: null # will be deprecated, use ppo_micro_batch_size_per_gpu
+    ppo_micro_batch_size_per_gpu: 2 # for dynamic bsz
+    use_dynamic_bsz: False # True
+    ppo_max_token_len_per_gpu: 36864
+    # n * ${data.max_prompt_length} + ${data.max_response_length}
+    grad_clip: 1.0
+    clip_ratio: 0.2
+    clip_ratio_low: 0.5
+    clip_ratio_high: 1.2
+    entropy_coeff: 0.001
+    use_kl_loss: True # True for GRPO
+    kl_loss_coef: 0.001 # for grpo
+    kl_loss_type: low_var_kl # for grpo
+    ppo_epochs: 1
+    shuffle: False
+    loss_mode: "vanilla" # Loss function mode: vanilla / clip-cov / kl-cov from https://arxiv.org/abs/2505.22617
+    clip_cov_ratio: 0.0002 # Ratio of tokens to be clipped for clip-cov loss
+    clip_cov_lb: 1.0 # Lower bound for clip-cov loss
+    clip_cov_ub: 5.0 # Upper bound for clip-cov loss
+    kl_cov_ratio: 0.0002 # Ratio of tokens to be applied kl penalty for kl-cov loss
+    ppo_kl_coef: 0.1 # KL divergence penalty coefficient
+    ulysses_sequence_parallel_size: 1 # sp size
+    multi_turn: True
+    optim:
+      lr: 1e-6
+      lr_warmup_steps_ratio: 0.  # the total steps will be injected during runtime
+      min_lr_ratio: null   # only useful for warmup with cosine
+      warmup_style: constant  # select from constant/cosine
+      total_training_steps: -1  # must be override by program
+    fsdp_config:
+      wrap_policy:
+        # transformer_layer_cls_to_wrap: None
+        min_num_params: 0
+      param_offload: True
+      optimizer_offload: True
+      fsdp_size: -1
+  ref:
+    fsdp_config:
+      param_offload: True
+      wrap_policy:
+        # transformer_layer_cls_to_wrap: None
+        min_num_params: 0
+    log_prob_micro_batch_size: null # will be deprecated, use log_prob_micro_batch_size_per_gpu
+    log_prob_micro_batch_size_per_gpu: 1
+    log_prob_use_dynamic_bsz: ${actor_rollout_ref.actor.use_dynamic_bsz}
+    log_prob_max_token_len_per_gpu: ${actor_rollout_ref.actor.ppo_max_token_len_per_gpu}
+    ulysses_sequence_parallel_size: ${actor_rollout_ref.actor.ulysses_sequence_parallel_size} # sp size
+  rollout:
+    name: async
+    task_type: gen_chat
+    prompt_length: ${data.max_prompt_length}  # not use for opensource
+    response_length: ${data.max_response_length}
+    # for vllm rollout
+    dtype: bfloat16 # should align with FSDP
+    temperature: ${.sampling_params.temperature} # this is currently ignored
+    gpu_memory_utilization: 0.7
+    enable_memory_saver: False
+    ignore_eos: False
+    enforce_eager: False
+    free_cache_engine: True
+    load_format: dummy
+    #cross_gen: True
+    base_url: http://controller_url:controller_port/api
+    tensor_model_parallel_size: 1
+    log_prob_micro_batch_size: null # will be deprecated, use log_prob_micro_batch_size_per_gpu
+    log_prob_micro_batch_size_per_gpu: 1
+    log_prob_use_dynamic_bsz: ${actor_rollout_ref.actor.use_dynamic_bsz}
+    log_prob_max_token_len_per_gpu: ${actor_rollout_ref.actor.ppo_max_token_len_per_gpu}
+    disable_log_stats: True
+    enable_chunked_prefill: True # could get higher throughput
+    # for hf rollout
+    do_sample: True
+    # number of responses (i.e. num sample times)
+    n: 16
+    multi_turn: ${actor_rollout_ref.actor.multi_turn}
+    max_turns: 40
+    plugin_browser: False
+    exchange_size: 0
+    path: ${actor_rollout_ref.model.path}
+    max_pixels: 500000
+    min_pixels: 65536
+    sampling_params:
+      temperature: 1.0
+      max_new_tokens: 2048
+      skip_special_tokens: False
+      no_stop_trim: True
+      stop: ["<|user|>", "<|observation|>", "</answer>"]
+    val_sampling_params:
+      temperature: 0.0
+      max_new_tokens: 2048
+      skip_special_tokens: False
+      no_stop_trim: True
+      stop: ["<|user|>", "<|observation|>", "</answer>"]
+
+critic: # no use
+  strategy: fsdp
+  optim:
+    lr: 1e-5
+    lr_warmup_steps_ratio: 0.  # the total steps will be injected during runtime
+    min_lr_ratio: null   # only useful for warmup with cosine
+    warmup_style: constant  # select from constant/cosine
+    total_training_steps: -1  # must be override by program
+  model:
+    path: 
+    tokenizer_path: ${actor_rollout_ref.model.path}
+    override_config: { }
+    external_lib: ${actor_rollout_ref.model.external_lib}
+    enable_gradient_checkpointing: True
+    use_remove_padding: False
+    fsdp_config:
+      param_offload: False
+      optimizer_offload: False
+      wrap_policy:
+        # transformer_layer_cls_to_wrap: None
+        min_num_params: 0
+      fsdp_size: -1
+  ppo_mini_batch_size: ${actor_rollout_ref.actor.ppo_mini_batch_size}
+  ppo_micro_batch_size: null # will be deprecated, use ppo_micro_batch_size_per_gpu
+  ppo_micro_batch_size_per_gpu: 1
+  forward_micro_batch_size: ${critic.ppo_micro_batch_size}
+  forward_micro_batch_size_per_gpu: ${critic.ppo_micro_batch_size_per_gpu}
+  use_dynamic_bsz: ${actor_rollout_ref.actor.use_dynamic_bsz}
+  ppo_max_token_len_per_gpu: 32768 # (${actor_rollout_ref.actor.ppo_max_token_len_per_gpu}) * 2
+  forward_max_token_len_per_gpu: ${critic.ppo_max_token_len_per_gpu}
+  ulysses_sequence_parallel_size: 1 # sp size
+  ppo_epochs: ${actor_rollout_ref.actor.ppo_epochs}
+  shuffle: ${actor_rollout_ref.actor.shuffle}
+  grad_clip: 1.0
+  cliprange_value: 0.5
+
+reward_model:
+  reward_manager: android
+  enable: False
+  length_normalise: False
+  success_penalty: True
+
+algorithm:
+  gamma: 1.0
+  lam: 1.0
+  adv_estimator: grpo
+  kl_penalty: kl  # how to estimate kl divergence
+  kl_ctrl:
+    type: fixed
+    kl_coef: 0.001
+  trace_level_kl_clip: False
+  mute_uid_all_zero_reward: True
+  use_replay_buffer: True
+  replay_buffer:
+    max_size: 256
+    top_ratio: 0.25
+    replay_ratio: 1.0
+    balance_alpha: 0.5
+
+trainer:
+  total_epochs: 10
+  hybrid_engine: False
+  total_training_steps: null
+  project_name: 
+  experiment_name:
+  logger: [ 'console','wandb']
+  val_generations_to_log_to_wandb: 0
+  nnodes: -1
+  n_gpus_per_node: -1
+  save_freq: 10
+  # auto: find the last ckpt to resume. If can't find, start from scratch
+  resume_mode: auto # or auto or resume_path if
+  resume_from_path: False
+  test_freq: -1
+  critic_warmup: 0
+  default_hdfs_dir: null
+  remove_previous_ckpt_in_save: False
+  del_local_ckpt_after_load: False
+  default_local_dir: /workspace/${trainer.project_name}/${trainer.experiment_name}
+  val_before_train: False
+  full_async: True
+  strict_queue: True 
+  placement:
+    pools:
+      rollout: 4
+      other: 4
+    mapping:
+      Rollout: rollout
+      Actor: other
+      Critic: other
+      RefPolicy: other
