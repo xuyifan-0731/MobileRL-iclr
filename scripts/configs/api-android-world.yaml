@@ -18,7 +18,7 @@ task:
     is_relative_bbox: true
 
 eval:
-  docker_image_name: xuyifan0731/mobilerl-androidworld-eval:latest
+  docker_image_name: anonymous0bvcow8qfggoyac/mobilerl-androidworld-eval:latest
   adb_path: /path/to/adb
   show_avd: false
   version: "v4"

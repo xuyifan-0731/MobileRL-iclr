@@ -3,7 +3,7 @@ name: mobilerl
 services:
 
   controller:
-    image: jingbh/agentrl-controller:latest
+    image: anonymous0bvcow8qfggoyac/agentrl-controller:latest
     container_name: agentrl-controller
     network_mode: host
     command:
